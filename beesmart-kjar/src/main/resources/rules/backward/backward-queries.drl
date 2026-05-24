@@ -1,0 +1,85 @@
+package rules.backward;
+
+import com.beesmart.model.Causes;
+import com.beesmart.model.BelongsToGroup;
+import com.beesmart.model.Hive;           // ← DODAJ OVO
+import com.beesmart.model.Recommendation;
+
+// Query 1: Recursive cause-effect chain
+query isCause( String cause, String effect )
+    Causes( cause, effect; )
+    or
+    ( Causes( cause, intermediate; ) and isCause( intermediate, effect; ) )
+end
+
+// Query 2: Recursive treatment hierarchy
+query belongsToCategory( String item, String category )
+    BelongsToGroup( item, category; )
+    or
+    ( BelongsToGroup( item, intermediateCategory; )
+      and belongsToCategory( intermediateCategory, category; ) )
+end
+
+// ─────────────────────────────────────────────
+// Rules that USE isCause query
+// ─────────────────────────────────────────────
+
+// Bound: check a specific cause-effect chain
+rule "Backward: Check if Varooza causes DeformedWings"
+when
+    String( this == "checkVarroaWings" )
+    isCause( "Varroosis", "DeformedWings"; )
+then
+    System.out.println("CONFIRMED: Varroosis causes Deformed Wings");
+end
+
+// Unbound: find ALL effects of a cause
+rule "Backward: All effects of Varroosis"
+when
+    String( this == "allVarroaEffects" )
+    isCause( "Varroosis", effect; )
+then
+    System.out.println("Varroosis causes: " + effect);
+end
+
+// Unbound: find ALL causes of a symptom
+rule "Backward: All causes of DeformedWings"
+when
+    String( this == "allCausesDeformedWings" )
+    isCause( cause, "DeformedWings"; )
+then
+    System.out.println("Cause of DeformedWings: " + cause);
+end
+
+// Both unbound: complete cause-effect map
+rule "Backward: Complete cause-effect map"
+when
+    String( this == "fullCauseMap" )
+    isCause( cause, effect; )
+then
+    System.out.println(cause + " -> " + effect);
+end
+
+// ─────────────────────────────────────────────
+// Rules that USE belongsToCategory query
+// ─────────────────────────────────────────────
+
+// Check if treatment is a chemical acaricide (for organic ban)
+rule "Backward: Ban chemical acaricide in organic"
+when
+    String( this == "checkOrganic" )
+    $h : Hive( organicProduction == true )
+    belongsToCategory( $treatment, "ChemicalAcaricide"; )
+then
+    System.out.println("BANNED in organic: " + $treatment);
+end
+
+// Find all allowed treatments for organic production
+rule "Backward: Allowed organic treatments"
+when
+    String( this == "allowedOrganic" )
+    belongsToCategory( treatment, "AntiVarroaTreatment"; )
+    not belongsToCategory( treatment, "ChemicalAcaricide"; )
+then
+    System.out.println("Allowed in organic: " + treatment);
+end
