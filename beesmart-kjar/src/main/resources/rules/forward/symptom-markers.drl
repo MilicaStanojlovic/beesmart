@@ -1,0 +1,96 @@
+package rules.forward;
+
+import com.beesmart.model.Symptom;
+import com.beesmart.model.Hive;
+import com.beesmart.model.DWVMarker;
+import com.beesmart.model.InfestationLevel;
+import com.beesmart.model.DiseaseSuspicion;
+import com.beesmart.model.events.MiteDropEvent;
+
+// ============================================================
+// LEVEL 1B: Symptom Classification
+// Input:  Symptom facts + sensor data
+// Output: DWVMarker, InfestationLevel, DiseaseSuspicion
+//         → triggers Level 2
+// ============================================================
+
+// --- DWV Virus Marker ---
+
+rule "Marker: DWV virus detected"
+    salience 90
+when
+    Symptom( name == "deformed_wings" )
+    not DWVMarker()
+then
+    insert(new DWVMarker(true));
+    System.out.println("[LEVEL1] Marker: DWV virus detected");
+end
+
+// --- Mite Infestation Level ---
+
+rule "Marker: High mite infestation"
+    salience 90
+when
+    MiteDropEvent( count > 10 )
+    not InfestationLevel()
+then
+    insert(new InfestationLevel("high"));
+    System.out.println("[LEVEL1] Marker: HIGH mite infestation (>10/day)");
+end
+
+// --- Disease Suspicions ---
+
+rule "Suspicion: American Foulbrood"
+    salience 90
+when
+    Symptom( name == "ropiness_test_positive" )
+    Symptom( name == "smell_of_decay" )
+    not DiseaseSuspicion( disease == "AmericanFoulbrood" )
+then
+    insert(new DiseaseSuspicion("AmericanFoulbrood", "high"));
+    System.out.println("[LEVEL1] Suspicion: American Foulbrood (high)");
+end
+
+rule "Suspicion: European Foulbrood"
+    salience 90
+when
+    Symptom( name == "yellowish_larvae" )
+    Symptom( name == "sour_smell" )
+    not DiseaseSuspicion( disease == "EuropeanFoulbrood" )
+then
+    insert(new DiseaseSuspicion("EuropeanFoulbrood", "high"));
+    System.out.println("[LEVEL1] Suspicion: European Foulbrood (high)");
+end
+
+rule "Suspicion: Chalkbrood"
+    salience 90
+when
+    Symptom( name == "mummified_larvae" )
+    Symptom( name == "high_humidity" )
+    not DiseaseSuspicion( disease == "Chalkbrood" )
+then
+    insert(new DiseaseSuspicion("Chalkbrood", "medium"));
+    System.out.println("[LEVEL1] Suspicion: Chalkbrood (medium)");
+end
+
+rule "Suspicion: Wax Moth"
+    salience 90
+when
+    Symptom( name == "moth_larvae_on_comb" )
+    $h : Hive( frameCount < 5 )
+    not DiseaseSuspicion( disease == "WaxMoth" )
+then
+    insert(new DiseaseSuspicion("WaxMoth", "medium"));
+    System.out.println("[LEVEL1] Suspicion: Wax Moth (medium)");
+end
+
+rule "Suspicion: Nosemosis"
+    salience 90
+when
+    Symptom( name == "diarrhea_on_landing_board" )
+    Symptom( name == "swollen_abdomen" )
+    not DiseaseSuspicion( disease == "Nosemosis" )
+then
+    insert(new DiseaseSuspicion("Nosemosis", "high"));
+    System.out.println("[LEVEL1] Suspicion: Nosemosis (high)");
+end

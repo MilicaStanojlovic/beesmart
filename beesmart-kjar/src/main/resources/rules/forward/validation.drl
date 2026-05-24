@@ -1,0 +1,113 @@
+package rules.forward;
+
+import com.beesmart.model.*;
+
+// ============================================================
+// LEVEL 4: Validation & Contraindication Checks
+// Input:  Recommendation (from Level 3) + Hive + Weather +
+//         TreatmentHistory
+// Output: modify(Recommendation) with warnings
+// ============================================================
+
+rule "Validate: Syrup in cold weather - use patty instead"
+    no-loop true
+    salience 60
+when
+    $r : Recommendation( text matches ".*syrup.*", warning == null )
+    Weather( forecast3DayTemp < 5 )
+then
+    modify($r) {
+        setText("CORRECTED: Use patty (Apifonda/Apiinvert) instead of syrup."),
+        setWarning("Syrup in cold weather causes moisture + nosemosis risk!")
+    };
+    System.out.println("[LEVEL4] CORRECTION: Patty instead of syrup");
+end
+
+rule "Validate: Formic acid with new queen"
+    no-loop true
+    salience 60
+when
+    $r : Recommendation( text matches ".*formic acid.*", warning == null )
+    $h : Hive( queenAgeMonths < 1 )
+then
+    modify($r) {
+        setWarning("CAUTION: Queen younger than 30 days! Formic acid may damage new queen. ALTERNATIVE: Oxalic acid sublimation 2g per box.")
+    };
+    System.out.println("[LEVEL4] WARNING: New queen + formic acid!");
+end
+
+rule "Validate: Chemical treatment in organic production"
+    no-loop true
+    salience 65
+when
+    $r : Recommendation( type == "TREATMENT", warning == null )
+    $h : Hive( organicProduction == true )
+    eval($r.getText().contains("Amitraz") || $r.getText().contains("Fluvalinate") || $r.getText().contains("Coumaphos"))
+then
+    modify($r) {
+        setWarning("PROHIBITED in organic production! Use organic acids or biotechnical methods only."),
+        setUrgency("URGENT")
+    };
+    System.out.println("[LEVEL4] PROHIBITED: Chemical acaricide in organic hive!");
+end
+
+rule "Validate: Super present during treatment"
+    no-loop true
+    salience 60
+when
+    $r : Recommendation( type == "TREATMENT", warning == null )
+    $h : Hive( hasSuper == true )
+    eval(!$r.getText().contains("Remove super"))
+then
+    modify($r) {
+        setWarning("SUPER IS PRESENT! Remove super before treatment to prevent honey contamination.")
+    };
+    System.out.println("[LEVEL4] WARNING: Super present during treatment!");
+end
+
+rule "Validate: Same treatment within 21 days - resistance risk"
+    no-loop true
+    salience 55
+when
+    $r : Recommendation( type == "TREATMENT", $text : text, warning == null )
+    $h : Hive( $hid : id )
+    TreatmentHistory( hiveId == $hid, daysAgo <= 21 )
+then
+    modify($r) {
+        setWarning("RESISTANCE RISK: Same treatment applied within last 21 days. Consider alternative.")
+    };
+    System.out.println("[LEVEL4] WARNING: Resistance risk");
+end
+
+rule "Validate: Antibiotics in last 12 months"
+    no-loop true
+    salience 55
+when
+    $r : Recommendation( type == "TREATMENT", warning == null )
+    $h : Hive( $hid : id )
+    TreatmentHistory( hiveId == $hid, daysAgo <= 365, antibiotic == true )
+then
+    modify($r) {
+        setWarning("Antibiotics used in last 12 months. Honey NOT suitable for consumption!")
+    };
+    System.out.println("[LEVEL4] WARNING: Honey not for consumption");
+end
+
+rule "Validate: Varroosis + weight loss + autumn - add feeding"
+    no-loop true
+    salience 50
+when
+    Diagnosis( disease == "Varroosis" )
+    $h : Hive( $hid : id )
+    eval($h.getMonthlyWeightLoss() > 5.0)
+    SeasonPhase( name == "AUTUMN_PREPARATION" || name == "LATE_SUMMER" )
+    not Recommendation( text matches ".*autumn feeding.*15kg.*" )
+then
+    Recommendation r = new Recommendation(
+        "After varroa treatment, start autumn feeding with 15kg sugar (syrup 3:2).", "HIGH");
+    r.setType("FEEDING");
+    r.setHiveId($hid);
+    r.setCheckInDays(7);
+    insert(r);
+    System.out.println("[LEVEL4] ADDITIONAL: Autumn feeding after varroa treatment");
+end

@@ -1,0 +1,76 @@
+package rules.forward;
+
+import com.beesmart.model.Weather;
+import com.beesmart.model.Bloom;
+import com.beesmart.model.SeasonPhase;
+
+// ============================================================
+// LEVEL 1A: Season Classification
+// Input:  Weather + Bloom facts
+// Output: SeasonPhase fact → triggers Level 2
+// ============================================================
+
+rule "Season: Early Spring"
+    salience 100
+when
+    $w : Weather( month == 3, avgWeeklyTemp > 10 )
+    Bloom( plant == "willow", active == true )
+    not SeasonPhase()
+then
+    insert(new SeasonPhase("EARLY_SPRING"));
+    System.out.println("[LEVEL1] Season: EARLY SPRING");
+end
+
+rule "Season: Spring Development"
+    salience 100
+when
+    $w : Weather( month == 4, avgWeeklyTemp > 15 )
+    Bloom( plant == "orchard", active == true )
+    not SeasonPhase()
+then
+    insert(new SeasonPhase("SPRING_DEVELOPMENT"));
+    System.out.println("[LEVEL1] Season: SPRING DEVELOPMENT");
+end
+
+rule "Season: Main Pasture"
+    salience 100
+when
+    $w : Weather( avgWeeklyTemp > 18 )
+    (Bloom( plant == "acacia", active == true ) or Bloom( plant == "linden", active == true ))
+    not SeasonPhase()
+then
+    insert(new SeasonPhase("MAIN_PASTURE"));
+    System.out.println("[LEVEL1] Season: MAIN PASTURE");
+end
+
+rule "Season: Late Summer"
+    salience 100
+when
+    $w : Weather( month >= 7, month <= 8, avgWeeklyTemp > 22 )
+    not Bloom( active == true )
+    not SeasonPhase()
+then
+    insert(new SeasonPhase("LATE_SUMMER"));
+    System.out.println("[LEVEL1] Season: LATE SUMMER (no pasture)");
+end
+
+rule "Season: Autumn Preparation"
+    salience 100
+when
+    $w : Weather( avgWeeklyTemp > 10, avgWeeklyTemp <= 18, forecast3DayTemp < 15 )
+    not Bloom( active == true )
+    not SeasonPhase()
+then
+    insert(new SeasonPhase("AUTUMN_PREPARATION"));
+    System.out.println("[LEVEL1] Season: AUTUMN PREPARATION");
+end
+
+rule "Season: Winter Cluster"
+    salience 100
+when
+    $w : Weather( avgWeeklyTemp <= 8 )
+    not SeasonPhase()
+then
+    insert(new SeasonPhase("WINTER_CLUSTER"));
+    System.out.println("[LEVEL1] Season: WINTER CLUSTER");
+end

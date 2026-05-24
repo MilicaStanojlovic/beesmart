@@ -1,0 +1,169 @@
+package rules.forward;
+
+import com.beesmart.model.*;
+
+// ─────────────────────────────────
+// DIAGNOSIS RULES
+// ─────────────────────────────────
+
+rule "Diagnosis: Varroosis (all symptoms)"
+    salience 85
+when
+    DWVMarker( detected == true )
+    InfestationLevel( level == "high" )
+    Symptom( name == "visible_mites" )
+    Symptom( name == "reduced_population" )
+    not Diagnosis( disease == "Varroosis" )
+then
+    insert(new Diagnosis("Varroosis", "URGENT", true));
+    System.out.println("[LEVEL2] DIAGNOSIS: Varroosis - ALL symptoms met - URGENT");
+end
+
+rule "Diagnosis: Nosemosis (all symptoms)"
+    salience 85
+when
+    DiseaseSuspicion( disease == "Nosemosis" )
+    Symptom( name == "spring_mortality" )
+    Symptom( name == "weak_spring_development" )
+    not Diagnosis( disease == "Nosemosis" )
+then
+    insert(new Diagnosis("Nosemosis", "HIGH", true));
+    System.out.println("[LEVEL2] DIAGNOSIS: Nosemosis - ALL symptoms met - HIGH");
+end
+
+rule "Diagnosis: American Foulbrood (accumulate count >= 4)"
+    salience 85
+when
+    DiseaseSuspicion( disease == "AmericanFoulbrood" )
+    Number( intValue >= 4 ) from accumulate(
+        Symptom(
+            name == "ropiness_test_positive" ||
+            name == "smell_of_decay" ||
+            name == "mosaic_brood" ||
+            name == "sunken_cappings" ||
+            name == "dark_sticky_larvae" ||
+            name == "reduced_population"
+        ),
+        count(1)
+    )
+    not Diagnosis( disease == "AmericanFoulbrood" )
+then
+    insert(new Diagnosis("AmericanFoulbrood", "URGENT", true));
+    System.out.println("[LEVEL2] DIAGNOSIS: American Foulbrood (>=4 symptoms) - URGENT");
+end
+
+rule "Diagnosis: European Foulbrood (accumulate count >= 4)"
+    salience 85
+when
+    DiseaseSuspicion( disease == "EuropeanFoulbrood" )
+    Number( intValue >= 4 ) from accumulate(
+        Symptom(
+            name == "yellowish_larvae" ||
+            name == "mosaic_brood" ||
+            name == "larvae_dead_before_capping" ||
+            name == "sour_smell" ||
+            name == "no_ropiness" ||
+            name == "reduced_pollen_intake"
+        ),
+        count(1)
+    )
+    not Diagnosis( disease == "EuropeanFoulbrood" )
+then
+    insert(new Diagnosis("EuropeanFoulbrood", "URGENT", true));
+    System.out.println("[LEVEL2] DIAGNOSIS: European Foulbrood (>=4 symptoms) - URGENT");
+end
+
+rule "Diagnosis: Chalkbrood (accumulate count >= 4)"
+    salience 85
+when
+    DiseaseSuspicion( disease == "Chalkbrood" )
+    Number( intValue >= 4 ) from accumulate(
+        Symptom(
+            name == "mummified_larvae" ||
+            name == "chalky_larvae_at_entrance" ||
+            name == "mosaic_brood" ||
+            name == "high_humidity" ||
+            name == "cold_location"
+        ),
+        count(1)
+    )
+    not Diagnosis( disease == "Chalkbrood" )
+then
+    insert(new Diagnosis("Chalkbrood", "HIGH", true));
+    System.out.println("[LEVEL2] DIAGNOSIS: Chalkbrood (>=4 symptoms) - HIGH");
+end
+
+rule "Diagnosis: Wax Moth (accumulate count >= 4)"
+    salience 85
+when
+    DiseaseSuspicion( disease == "WaxMoth" )
+    Number( intValue >= 4 ) from accumulate(
+        Symptom(
+            name == "moth_larvae_on_comb" ||
+            name == "tunnels_webbing" ||
+            name == "damaged_comb" ||
+            name == "weak_colony_under_5" ||
+            name == "poor_comb_storage"
+        ),
+        count(1)
+    )
+    not Diagnosis( disease == "WaxMoth" )
+then
+    insert(new Diagnosis("WaxMoth", "MEDIUM", true));
+    System.out.println("[LEVEL2] DIAGNOSIS: Wax Moth (>=4 symptoms) - MEDIUM");
+end
+
+rule "Diagnosis: CCD (1 specific + 2 general)"
+    salience 85
+when
+    Number( intValue >= 1 ) from accumulate(
+        Symptom(
+            specific == true,
+            name == "sudden_disappearance" ||
+            name == "treated_with_pesticides" ||
+            name == "varroa_history_6m"
+        ),
+        count(1)
+    )
+    Number( intValue >= 2 ) from accumulate(
+        Symptom(
+            specific == false,
+            name == "untouched_stores" ||
+            name == "no_dead_bees" ||
+            name == "brood_without_bees"
+        ),
+        count(1)
+    )
+    not Diagnosis( disease == "CCD" )
+then
+    insert(new Diagnosis("CCD", "URGENT", true));
+    System.out.println("[LEVEL2] DIAGNOSIS: CCD (Colony Collapse Disorder) - URGENT");
+end
+
+rule "Diagnosis: Weakening Syndrome (1 specific + 2 general)"
+    salience 84
+when
+    Number( intValue >= 1 ) from accumulate(
+        Symptom(
+            specific == true,
+            name == "gradual_population_decline" ||
+            name == "varroa_nosema_history_6m" ||
+            name == "antibiotics_60d"
+        ),
+        count(1)
+    )
+    Number( intValue >= 2 ) from accumulate(
+        Symptom(
+            specific == false,
+            name == "reduced_egg_laying" ||
+            name == "weak_brood" ||
+            name == "reduced_nectar_intake"
+        ),
+        count(1)
+    )
+    not Diagnosis( disease == "CCD" )
+    not Diagnosis( disease == "WeakeningSyndrome" )
+then
+    insert(new Diagnosis("WeakeningSyndrome", "HIGH", true));
+    System.out.println("[LEVEL2] DIAGNOSIS: Weakening Syndrome - HIGH");
+end

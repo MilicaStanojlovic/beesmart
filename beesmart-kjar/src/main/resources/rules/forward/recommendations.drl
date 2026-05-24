@@ -1,0 +1,255 @@
+package rules.forward;
+
+import com.beesmart.model.*;
+
+// ============================================================
+// LEVEL 3: Recommendations & Treatments
+// Input:  SocietyStatus + Diagnosis (from Level 2) +
+//         Hive + SeasonPhase + Weather
+// Output: Recommendation → triggers Level 4 validation
+// ============================================================
+
+// ─────────────────────────────────
+// SEASONAL RECOMMENDATIONS
+// ─────────────────────────────────
+
+rule "Recommend: Feed weak spring colony - LR hive"
+    salience 70
+when
+    SocietyStatus( status == "weak-spring", intervention == true )
+    $h : Hive( hiveType == "LR" )
+    not Recommendation( type == "FEEDING", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Narrow to 5-6 frames, add divider. Feed with 1:1 syrup 0.5L every 48h.", "HIGH");
+    r.setType("FEEDING");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(7);
+    insert(r);
+    System.out.println("[LEVEL3] Recommendation: Feed weak spring LR");
+end
+
+rule "Recommend: Feed weak spring colony - DB hive"
+    salience 70
+when
+    SocietyStatus( status == "weak-spring", intervention == true )
+    $h : Hive( hiveType == "DB" )
+    not Recommendation( type == "FEEDING", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Narrow to half-super with 5 frames. Feed Apifonda patty 500g on top bars.", "HIGH");
+    r.setType("FEEDING");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(10);
+    insert(r);
+    System.out.println("[LEVEL3] Recommendation: Feed weak spring DB");
+end
+
+rule "Recommend: Anti-swarming measures"
+    salience 75
+when
+    SocietyStatus( status == "swarming-mood", intervention == true )
+    $h : Hive()
+    not Recommendation( type == "ANTI_SWARM", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Destroy all queen cells. Add super with foundation. Space out brood frames. " +
+        "Option: make a split with old queen.", "URGENT");
+    r.setType("ANTI_SWARM");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(5);
+    insert(r);
+    System.out.println("[LEVEL3] Recommendation: ANTI-SWARM measures - URGENT");
+end
+
+rule "Recommend: Emergency autumn feeding"
+    salience 70
+when
+    SocietyStatus( status == "critical-for-winter", intervention == true )
+    $h : Hive()
+    not Recommendation( type == "FEEDING", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Emergency autumn feeding: syrup 3:2. Target: 15-18kg total stores. " +
+        "Reduce entrance. Consider merging with strong colony.", "HIGH");
+    r.setType("FEEDING");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(7);
+    insert(r);
+    System.out.println("[LEVEL3] Recommendation: Emergency autumn feeding");
+end
+
+rule "Recommend: Replace old queen"
+    salience 65
+when
+    SocietyStatus( status == "old-queen", intervention == true )
+    $h : Hive()
+    not Recommendation( type == "QUEEN_REPLACE", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Replace queen with a young marked queen (current year).", "MEDIUM");
+    r.setType("QUEEN_REPLACE");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(14);
+    insert(r);
+    System.out.println("[LEVEL3] Recommendation: Replace old queen");
+end
+
+// ─────────────────────────────────
+// DISEASE TREATMENTS
+// ─────────────────────────────────
+
+rule "Treatment: Varroosis - formic acid (summer, super present)"
+    salience 75
+when
+    Diagnosis( disease == "Varroosis", urgency == "URGENT" )
+    $h : Hive( hasSuper == true )
+    $w : Weather( currentTemp > 15 )
+    not Recommendation( type == "TREATMENT", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Remove super first! Apply formic acid 60%, 20ml on sponge, 3x every 7 days.", "URGENT");
+    r.setType("TREATMENT");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(7);
+    insert(r);
+    System.out.println("[LEVEL3] Treatment: Varroosis - formic acid - URGENT");
+end
+
+rule "Treatment: Varroosis - oxalic acid (late autumn, broodless)"
+    salience 75
+when
+    Diagnosis( disease == "Varroosis" )
+    SeasonPhase( name == "AUTUMN_PREPARATION" || name == "WINTER_CLUSTER" )
+    $h : Hive( broodFrameCount == 0 )
+    not Recommendation( type == "TREATMENT", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Broodless period - ideal for oxalic acid! Sublimation: 2g per box. " +
+        "OR drip method: 3.5g/L, 5ml per bee space.", "HIGH");
+    r.setType("TREATMENT");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(14);
+    insert(r);
+    System.out.println("[LEVEL3] Treatment: Varroosis - oxalic acid");
+end
+
+rule "Treatment: American Foulbrood - REPORT"
+    salience 95
+when
+    Diagnosis( disease == "AmericanFoulbrood" )
+    $h : Hive()
+    not Recommendation( type == "TREATMENT", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "REPORT to veterinary inspection IMMEDIATELY! Legally required. " +
+        "Burn combs and frames. Disinfect hive body with flame. " +
+        "Shake bees onto foundation. Quarantine apiary.", "URGENT");
+    r.setType("TREATMENT");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(1);
+    insert(r);
+    System.out.println("[LEVEL3] Treatment: AMERICAN FOULBROOD - REPORT! URGENT!");
+end
+
+rule "Treatment: European Foulbrood"
+    salience 90
+when
+    Diagnosis( disease == "EuropeanFoulbrood" )
+    $h : Hive()
+    not Recommendation( type == "TREATMENT", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Shake bees onto foundation. Feed the colony. " +
+        "Replace queen if laying pattern poor.", "URGENT");
+    r.setType("TREATMENT");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(7);
+    insert(r);
+    System.out.println("[LEVEL3] Treatment: European Foulbrood - URGENT");
+end
+
+rule "Treatment: Chalkbrood"
+    salience 70
+when
+    Diagnosis( disease == "Chalkbrood" )
+    $h : Hive()
+    not Recommendation( type == "TREATMENT", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Improve ventilation, move hive to sunnier location. " +
+        "Replace affected combs. Consider requeening with hygienic stock.", "HIGH");
+    r.setType("TREATMENT");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(14);
+    insert(r);
+    System.out.println("[LEVEL3] Treatment: Chalkbrood");
+end
+
+rule "Treatment: Wax Moth"
+    salience 60
+when
+    Diagnosis( disease == "WaxMoth" )
+    $h : Hive()
+    not Recommendation( type == "TREATMENT", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Strengthen colony. Remove damaged comb. Treat stored comb with sulfur dioxide. " +
+        "Store comb in cold, well-ventilated area.", "MEDIUM");
+    r.setType("TREATMENT");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(14);
+    insert(r);
+    System.out.println("[LEVEL3] Treatment: Wax Moth");
+end
+
+rule "Treatment: Nosemosis"
+    salience 75
+when
+    Diagnosis( disease == "Nosemosis" )
+    $h : Hive()
+    not Recommendation( type == "TREATMENT", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Feed with syrup enriched with thymol. Replace old combs. " +
+        "Ensure good ventilation. Consider lab analysis to confirm.", "HIGH");
+    r.setType("TREATMENT");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(14);
+    insert(r);
+    System.out.println("[LEVEL3] Treatment: Nosemosis");
+end
+
+rule "Treatment: CCD"
+    salience 90
+when
+    Diagnosis( disease == "CCD" )
+    $h : Hive()
+    not Recommendation( type == "TREATMENT", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Eliminate pesticide exposure. Strengthen colony with nurse bees from healthy hive. " +
+        "Replace queen. Monitor closely for 30 days.", "URGENT");
+    r.setType("TREATMENT");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(7);
+    insert(r);
+    System.out.println("[LEVEL3] Treatment: CCD - URGENT");
+end
+
+rule "Treatment: Weakening Syndrome"
+    salience 75
+when
+    Diagnosis( disease == "WeakeningSyndrome" )
+    $h : Hive()
+    not Recommendation( type == "TREATMENT", hiveId == $h.id )
+then
+    Recommendation r = new Recommendation(
+        "Treat underlying disease first (varroa/nosema). Feed supplemental protein patty. " +
+        "Consider merging with strong colony if unresponsive in 14 days.", "HIGH");
+    r.setType("TREATMENT");
+    r.setHiveId($h.getId());
+    r.setCheckInDays(14);
+    insert(r);
+    System.out.println("[LEVEL3] Treatment: Weakening Syndrome");
+end

@@ -1,0 +1,51 @@
+package rules.forward;
+
+import com.beesmart.model.*;
+
+// ─────────────────────────────────
+// HIVE CONDITION ASSESSMENT
+// ─────────────────────────────────
+
+rule "Condition: Weak spring colony"
+    salience 80
+when
+    SeasonPhase( name == "EARLY_SPRING" )
+    $h : Hive( broodFrameCount < 3, honeyStockKg < 3.0 )
+    not SocietyStatus( status == "weak-spring" )
+then
+    insert(new SocietyStatus("weak-spring", true));
+    System.out.println("[LEVEL2] Hive #" + $h.getId() + ": WEAK spring colony");
+end
+
+rule "Condition: Swarming mood"
+    salience 85
+when
+    SeasonPhase( name == "SPRING_DEVELOPMENT" || name == "MAIN_PASTURE" )
+    $h : Hive( frameCount >= 10, breed == "Carniolan" )
+    Symptom( name == "queen_cells" )
+    not SocietyStatus( status == "swarming-mood" )
+then
+    insert(new SocietyStatus("swarming-mood", true));
+    System.out.println("[LEVEL2] Hive #" + $h.getId() + ": SWARMING MOOD!");
+end
+
+rule "Condition: Critically weak for winter"
+    salience 80
+when
+    SeasonPhase( name == "AUTUMN_PREPARATION" )
+    $h : Hive( frameCount < 5, honeyStockKg < 8.0 )
+    not SocietyStatus( status == "critical-for-winter" )
+then
+    insert(new SocietyStatus("critical-for-winter", true));
+    System.out.println("[LEVEL2] Hive #" + $h.getId() + ": CRITICAL for winter");
+end
+
+rule "Condition: Old queen"
+    salience 75
+when
+    $h : Hive( queenAgeMonths > 24, weakEggLaying == true )
+    not SocietyStatus( status == "old-queen" )
+then
+    insert(new SocietyStatus("old-queen", true));
+    System.out.println("[LEVEL2] Hive #" + $h.getId() + ": Old queen (>24 months)");
+end
