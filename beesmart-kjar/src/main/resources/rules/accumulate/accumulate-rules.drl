@@ -1,0 +1,72 @@
+package rules.accumulate;
+
+import com.beesmart.model.*;
+import com.beesmart.model.events.MiteDropEvent;
+import com.beesmart.model.events.TemperatureEvent;
+import java.util.List;
+
+// ============================================================
+// ACCUMULATE RULES
+// Standalone aggregation rules (beyond those in diagnosis.drl)
+// ============================================================
+
+// SUM: Total mite drop over multiple measurements
+rule "Accumulate: High varroa infestation (sum mite drop > 30)"
+    salience 85
+when
+    Number( $totalDrop : intValue > 30 ) from accumulate(
+        MiteDropEvent( $c : count ),
+        sum( $c )
+    )
+    not Alarm( message matches ".*mite drop.*" )
+then
+    insert(new Alarm("HIGH INFESTATION: total mite drop " + $totalDrop +
+        " across measurements (threshold: 30). URGENT treatment needed!", "URGENT"));
+    System.out.println("[ACCUMULATE-SUM] Total mite drop = " + $totalDrop + " (>30 ALARM)");
+end
+
+// AVERAGE: Average brood temperature
+rule "Accumulate: Low average brood temperature"
+    salience 80
+when
+    Number( $avg : doubleValue < 34.0 ) from accumulate(
+        TemperatureEvent( zone == "brood", $t : temperature ),
+        average( $t )
+    )
+    not Alarm( message matches ".*brood temperature.*" )
+then
+    insert(new Alarm("Low average brood temperature: " +
+        String.format("%.1f", $avg) + "°C (minimum 34°C). " +
+        "Check colony strength and insulation!", "HIGH"));
+    System.out.println("[ACCUMULATE-AVG] Avg brood temp = " +
+        String.format("%.1f", $avg) + "°C (<34 ALARM)");
+end
+
+// COUNT: Chronic problems (same disease diagnosed > 3 times)
+rule "Accumulate: Chronic disease problem"
+    salience 50
+when
+    $d : Diagnosis( $disease : disease )
+    Number( $count : intValue > 3 ) from accumulate(
+        Diagnosis( disease == $disease ),
+        count(1)
+    )
+then
+    System.out.println("[ACCUMULATE-COUNT] Chronic problem: " +
+        $disease + " diagnosed " + $count + " times");
+end
+
+// COLLECT LIST: Multiple active diagnoses on same hive
+rule "Accumulate: Multiple diagnoses - urgent inspection"
+    salience 40
+when
+    $diagnoses : List( size > 2 ) from accumulate(
+        $d : Diagnosis(),
+        collectList( $d )
+    )
+    not Alarm( message matches ".*multiple diagnoses.*" )
+then
+    insert(new Alarm("HIVE HAS " + $diagnoses.size() +
+        " ACTIVE DIAGNOSES! Urgent inspection needed.", "URGENT"));
+    System.out.println("[ACCUMULATE-COLLECT] " + $diagnoses.size() + " active diagnoses!");
+end
