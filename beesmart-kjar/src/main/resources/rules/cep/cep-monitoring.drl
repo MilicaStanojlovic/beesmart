@@ -1,0 +1,207 @@
+package rules.cep;
+
+import com.beesmart.model.Alarm;
+import com.beesmart.model.Bloom;
+import com.beesmart.model.SeasonPhase;
+import com.beesmart.model.events.TemperatureEvent;
+import com.beesmart.model.events.SoundEvent;
+import com.beesmart.model.events.WeightEvent;
+import com.beesmart.model.events.HumidityEvent;
+
+// ============================================================
+// CEP RULES - Complex Event Processing
+// Session: cepSession (STREAM mode, realtime clock)
+// All sensor data annotated with @Role(EVENT)
+// Uses temporal operators: after[], window:time()
+// ============================================================
+
+
+// ─────────────────────────────────────────────
+// 1. SWARMING DETECTION
+// Temperature rise + sound increase + weight drop
+// in defined time windows
+// ─────────────────────────────────────────────
+
+rule "CEP: Swarming detected"
+    no-loop true
+when
+    // Temperature rose by >2°C within 30 minutes
+    $t1 : TemperatureEvent( zone == "brood", $temp1 : temperature )
+    $t2 : TemperatureEvent( zone == "brood",
+                            temperature > ($temp1 + 2.0),
+                            this after[0s, 30m] $t1 )
+
+    // Sound increased by >40% within 60 minutes
+    $s1 : SoundEvent( $db1 : decibelLevel )
+    $s2 : SoundEvent( decibelLevel > ($db1 * 1.4),
+                      this after[0s, 60m] $s1 )
+
+    // Weight dropped by >1.5kg within 15 minutes (swarm leaving)
+    $w1 : WeightEvent( $kg1 : weightKg )
+    $w2 : WeightEvent( weightKg < ($kg1 - 1.5),
+                       this after[0s, 15m] $w1 )
+
+    not Alarm( type == "SWARMING" )
+then
+    Alarm alarm = new Alarm("SWARMING IN PROGRESS! Temp +" +
+        String.format("%.1f", $t2.getTemperature() - $temp1) +
+        "°C, sound +40%, weight -" +
+        String.format("%.1f", $kg1 - $w2.getWeightKg()) +
+        "kg. IMMEDIATE intervention needed!", "URGENT");
+    alarm.setType("SWARMING");
+    alarm.setHiveId($t1.getHiveId());
+    insert(alarm);
+    System.out.println("[CEP] *** SWARMING DETECTED *** Hive #" + $t1.getHiveId());
+end
+
+
+// ─────────────────────────────────────────────
+// 2. ROBBING DETECTION
+// Weight loss without pasture + increased sound
+// ─────────────────────────────────────────────
+
+rule "CEP: Robbing detected"
+    no-loop true
+when
+    // No active pasture in the region
+    not Bloom( active == true )
+
+    // Sound increased by >30% within 2 hours (fighting bees)
+    $s1 : SoundEvent( $db1 : decibelLevel )
+    $s2 : SoundEvent( decibelLevel > ($db1 * 1.3),
+                      this after[0s, 2h] $s1 )
+
+    // Daily weight loss > 0.5kg (sliding window 24h)
+    Number( $dailyLoss : doubleValue > 0.5 ) from accumulate(
+        $w1 : WeightEvent( $kg : weightKg )
+            over window:time( 24h ),
+        max( $kg )
+    )
+
+    not Alarm( type == "ROBBING" )
+then
+    Alarm alarm = new Alarm(
+        "POSSIBLE ROBBING! Sound increased 30%+, daily weight loss detected. " +
+        "No active pasture. REDUCE entrance to single-bee width!", "HIGH");
+    alarm.setType("ROBBING");
+    alarm.setHiveId($s1.getHiveId());
+    insert(alarm);
+    System.out.println("[CEP] *** ROBBING DETECTED *** Hive #" + $s1.getHiveId());
+end
+
+
+// ─────────────────────────────────────────────
+// 3. QUEEN LOSS DETECTION ("piping/queenless roar")
+// Average frequency >500Hz sustained for 48h
+// Normal buzz: 200-400Hz, queenless: >500Hz
+// ─────────────────────────────────────────────
+
+rule "CEP: Queen loss detected"
+    no-loop true
+when
+    // Average frequency over 48h exceeds 500Hz
+    Number( $avgFreq : doubleValue > 500.0 ) from accumulate(
+        SoundEvent( $f : frequencyHz )
+            over window:time( 48h ),
+        average( $f )
+    )
+
+    not Alarm( type == "QUEEN_LOSS" )
+then
+    Alarm alarm = new Alarm(
+        "POSSIBLE QUEEN LOSS! Average sound frequency " +
+        String.format("%.0f", $avgFreq) + "Hz over 48h " +
+        "(normal: 200-400Hz, queenless: >500Hz). " +
+        "Inspect within 24 hours!", "HIGH");
+    alarm.setType("QUEEN_LOSS");
+    insert(alarm);
+    System.out.println("[CEP] *** QUEEN LOSS DETECTED *** Avg freq: " +
+        String.format("%.0f", $avgFreq) + "Hz");
+end
+
+
+// ─────────────────────────────────────────────
+// 4. CRITICAL BROOD TEMPERATURE
+// Average brood temp <34°C sustained for 2h
+// + external temp below 5°C
+// ─────────────────────────────────────────────
+
+rule "CEP: Critical brood temperature"
+    no-loop true
+when
+    // Average brood temp over 2h below 34°C
+    Number( $avgTemp : doubleValue < 34.0 ) from accumulate(
+        TemperatureEvent( zone == "brood", $t : temperature )
+            over window:time( 2h ),
+        average( $t )
+    )
+
+    // External temperature below 5°C
+    TemperatureEvent( zone == "external", temperature < 5.0 )
+
+    not Alarm( type == "BROOD_TEMP" )
+then
+    Alarm alarm = new Alarm(
+        "CRITICAL BROOD TEMPERATURE! Average " +
+        String.format("%.1f", $avgTemp) + "°C over 2h " +
+        "(minimum 34°C required). External temp < 5°C. " +
+        "Check colony strength and insulation!", "HIGH");
+    alarm.setType("BROOD_TEMP");
+    insert(alarm);
+    System.out.println("[CEP] *** CRITICAL BROOD TEMP *** Avg: " +
+        String.format("%.1f", $avgTemp) + "°C");
+end
+
+
+// ─────────────────────────────────────────────
+// 5. SUDDEN WEIGHT DROP
+// Weight drops >5kg within 5 minutes
+// (possible toppling, theft, or swarming)
+// ─────────────────────────────────────────────
+
+rule "CEP: Sudden weight drop"
+    no-loop true
+when
+    $w1 : WeightEvent( $kg1 : weightKg )
+    $w2 : WeightEvent( weightKg < ($kg1 - 5.0),
+                       this after[0s, 5m] $w1 )
+
+    not Alarm( type == "WEIGHT_DROP" )
+then
+    Alarm alarm = new Alarm(
+        "SUDDEN WEIGHT DROP: -" +
+        String.format("%.1f", $kg1 - $w2.getWeightKg()) +
+        "kg in <5 minutes! Possible: toppling, theft, or swarming.", "URGENT");
+    alarm.setType("WEIGHT_DROP");
+    alarm.setHiveId($w1.getHiveId());
+    insert(alarm);
+    System.out.println("[CEP] *** SUDDEN WEIGHT DROP *** -" +
+        String.format("%.1f", $kg1 - $w2.getWeightKg()) + "kg");
+end
+
+
+// ─────────────────────────────────────────────
+// 6. HIGH HUMIDITY (bonus - risk of chalkbrood)
+// Average humidity >75% sustained for 6h
+// ─────────────────────────────────────────────
+
+rule "CEP: High humidity alert"
+    no-loop true
+when
+    Number( $avgHum : doubleValue > 75.0 ) from accumulate(
+        HumidityEvent( $h : humidity )
+            over window:time( 6h ),
+        average( $h )
+    )
+
+    not Alarm( type == "HIGH_HUMIDITY" )
+then
+    Alarm alarm = new Alarm(
+        "HIGH HUMIDITY: average " + String.format("%.0f", $avgHum) +
+        "% over 6h (max 75%). Risk: chalkbrood, mold. " +
+        "Improve ventilation, widen entrance.", "MEDIUM");
+    alarm.setType("HIGH_HUMIDITY");
+    insert(alarm);
+    System.out.println("[CEP] *** HIGH HUMIDITY *** Avg: " +
+        String.format("%.0f", $avgHum) + "%");
+end
