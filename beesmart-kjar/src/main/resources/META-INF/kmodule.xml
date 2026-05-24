@@ -1,0 +1,21 @@
+<kmodule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://jboss.org/kie/6.0.0/kmodule">
+
+    <!-- Forward chaining + Backward + Accumulate -->
+    <kbase name="forwardKBase" packages="rules.forward, rules.backward, rules.accumulate">
+        <ksession name="forwardSession"/>
+    </kbase>
+
+    <!-- CEP - must be STREAM mode -->
+    <kbase name="cepKBase" packages="rules.cep"
+           eventProcessingMode="stream">
+        <ksession name="cepSession" type="stateful"
+                  clockType="realtime"/>
+    </kbase>
+
+    <!-- Templates -->
+    <kbase name="templateKBase" packages="rules.templates">
+        <ksession name="templateSession"/>
+    </kbase>
+
+</kmodule>
