@@ -1,0 +1,15 @@
+breed,month,minTemp,activity,urgency,checkDays
+Carniolan,3,8,First spring inspection. Check stores. Feed if honey < 3kg.,HIGH,7
+Carniolan,4,12,Check for swarming mood. Add super if > 8 frames of bees.,HIGH,5
+Carniolan,5,16,Place supers for acacia flow. Widen entrance. Do not disturb during flow.,URGENT,3
+Carniolan,6,20,Harvest acacia honey. Check queen. Prepare for linden flow.,HIGH,7
+Carniolan,7,20,Harvest linden honey. Start varroa treatment (formic acid). Remove super.,URGENT,7
+Carniolan,8,18,Continue varroa treatment. Begin autumn feeding.,HIGH,7
+Carniolan,9,12,Complete autumn feeding (15-18kg sugar). Reduce entrances.,HIGH,10
+Carniolan,10,8,Oxalic acid drip if broodless. Install mouse guard.,MEDIUM,14
+Carniolan,11,2,Winter oxalic acid treatment (sublimation). Leave hives undisturbed.,HIGH,30
+Carniolan,12,-5,Do not open hives. Monitor weight (min 20kg with bees).,LOW,30
+Italian,3,10,Italian starts earlier. First inspection. Watch for already active development.,HIGH,7
+Italian,4,14,Italian grows fast - add super earlier. Less prone to swarming.,HIGH,5
+Buckfast,4,10,Buckfast: active development begins. Gentle inspection. Less swarming tendency.,MEDIUM,10
+Buckfast,5,16,Buckfast: expand space. More resistant breed - fewer treatments needed.,HIGH,7

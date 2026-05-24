@@ -1,0 +1,30 @@
+template header
+breed
+month
+minTemp
+activity
+urgency
+checkDays
+
+package rules.templates;
+
+import com.beesmart.model.Hive;
+import com.beesmart.model.Weather;
+import com.beesmart.model.Recommendation;
+
+template "seasonal-calendar"
+
+rule "Seasonal activity @{row.rowNumber} - @{breed} month @{month}"
+no-loop true
+when
+    $h : Hive( breed == "@{breed}" )
+    $w : Weather( month == @{month}, avgWeeklyTemp > @{minTemp} )
+then
+    Recommendation r = new Recommendation($h.getId(), "@{activity}");
+    r.setType("INSPECTION");
+    r.setUrgency("@{urgency}");
+    r.setCheckInDays(@{checkDays});
+    insert(r);
+end
+
+end template

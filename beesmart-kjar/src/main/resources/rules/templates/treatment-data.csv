@@ -1,0 +1,10 @@
+hiveType,treatment,dosage,notes
+LR,Formic acid 60%,20ml on sponge 3x every 7 days,Standard LR frame size
+DB,Formic acid 60%,30ml on sponge 3x every 7 days,DB has larger box - increased dose
+AZ,Formic acid 60%,15ml on sponge 3x every 7 days,AZ is smaller - reduced dose
+LR,Oxalic acid sublimation,2g per box,Best when broodless (late autumn)
+DB,Oxalic acid sublimation,3g per box,DB larger volume
+AZ,Oxalic acid sublimation,1.5g per box,AZ smaller volume
+LR,Oxalic acid drip,3.5g/L - 5ml per bee space,Apply between frames
+DB,Oxalic acid drip,3.5g/L - 6ml per bee space,DB wider spaces
+AZ,Oxalic acid drip,3.5g/L - 4ml per bee space,AZ narrower spaces

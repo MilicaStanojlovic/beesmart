@@ -1,0 +1,28 @@
+template header
+hiveType
+treatment
+dosage
+notes
+
+package rules.templates;
+
+import com.beesmart.model.Diagnosis;
+import com.beesmart.model.Hive;
+import com.beesmart.model.Recommendation;
+
+template "treatment-by-hive-type"
+
+rule "Varroa treatment @{row.rowNumber} - @{hiveType}"
+no-loop true
+when
+    $d : Diagnosis( disease == "Varroosis" )
+    $h : Hive( hiveType == "@{hiveType}" )
+then
+    Recommendation r = new Recommendation($h.getId(),
+        "@{treatment}: @{dosage}. @{notes}");
+    r.setType("TREATMENT");
+    r.setUrgency("URGENT");
+    insert(r);
+end
+
+end template
