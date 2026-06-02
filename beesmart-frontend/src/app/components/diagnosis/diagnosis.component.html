@@ -1,0 +1,187 @@
+<div class="diagnosis-page">
+  <div class="page-header">
+    <h2 class="page-title">Hive Diagnosis</h2>
+    <p class="page-subtitle">Forward chaining — enter hive data and symptoms to run 4-level rule chain</p>
+  </div>
+
+  <div class="grid-2">
+    <!-- LEFT: Input -->
+    <div class="input-column">
+
+      <div class="card">
+        <div class="card-title">Hive Information</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Hive ID</label>
+            <input type="number" [(ngModel)]="hive.id" placeholder="e.g. 14">
+          </div>
+          <div class="form-group">
+            <label>Hive Type</label>
+            <select [(ngModel)]="hive.hiveType">
+              <option value="LR">LR (Langstroth-Root)</option>
+              <option value="DB">DB (Dadant-Blatt)</option>
+              <option value="AZ">AZ (Postar/AZ)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Breed</label>
+            <select [(ngModel)]="hive.breed">
+              <option value="Carniolan">Carniolan</option>
+              <option value="Italian">Italian</option>
+              <option value="Buckfast">Buckfast</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Frame Count</label>
+            <input type="number" [(ngModel)]="hive.frameCount">
+          </div>
+          <div class="form-group">
+            <label>Brood Frames</label>
+            <input type="number" [(ngModel)]="hive.broodFrameCount">
+          </div>
+          <div class="form-group">
+            <label>Honey Stock (kg)</label>
+            <input type="number" [(ngModel)]="hive.honeyStockKg">
+          </div>
+          <div class="form-group">
+            <label>Queen Age (months)</label>
+            <input type="number" [(ngModel)]="hive.queenAgeMonths">
+          </div>
+          <div class="form-group">
+            <label>Weight (kg)</label>
+            <input type="number" [(ngModel)]="hive.weightKg">
+          </div>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-label"><input type="checkbox" [(ngModel)]="hive.hasSuper"> Super present</label>
+          <label class="toggle-label"><input type="checkbox" [(ngModel)]="hive.organicProduction"> Organic</label>
+          <label class="toggle-label"><input type="checkbox" [(ngModel)]="hive.weakEggLaying"> Weak laying</label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Weather &amp; Season</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Month</label>
+            <input type="number" [(ngModel)]="weather.month" min="1" max="12">
+          </div>
+          <div class="form-group">
+            <label>Avg Weekly Temp (°C)</label>
+            <input type="number" [(ngModel)]="weather.avgWeeklyTemp">
+          </div>
+          <div class="form-group">
+            <label>Current Temp (°C)</label>
+            <input type="number" [(ngModel)]="weather.currentTemp">
+          </div>
+          <div class="form-group">
+            <label>3-Day Forecast (°C)</label>
+            <input type="number" [(ngModel)]="weather.forecast3DayTemp">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Active Bloom</label>
+          <select [(ngModel)]="activeBloom">
+            <option value="none">No active bloom</option>
+            <option value="willow">Willow</option>
+            <option value="orchard">Orchard</option>
+            <option value="acacia">Acacia</option>
+            <option value="linden">Linden</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Observed Symptoms</div>
+        <div class="checkbox-group">
+          <label *ngFor="let s of availableSymptoms">
+            <input type="checkbox" [checked]="selectedSymptoms.includes(s.name)"
+                   (change)="toggleSymptom(s.name)">
+            {{ s.label }}
+          </label>
+        </div>
+        <div class="divider"></div>
+        <div class="form-group">
+          <label>Mite Drop Count (per day)</label>
+          <input type="number" [(ngModel)]="miteDropCount" placeholder="0">
+        </div>
+      </div>
+
+      <button class="btn btn-primary run-btn" (click)="runDiagnosis()">Run Diagnosis</button>
+    </div>
+
+    <!-- RIGHT: Results -->
+    <div class="results-column">
+      <div class="card" *ngIf="!result">
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+          </svg>
+          <p>Configure parameters and run diagnosis to view results.</p>
+        </div>
+      </div>
+
+      <div *ngIf="result">
+        <div class="card">
+          <div class="card-title">Results</div>
+          <div class="meta-row">
+            <span class="meta-item">Rules fired: <strong>{{ result.rulesFired }}</strong></span>
+          </div>
+
+          <div class="section" *ngIf="result.seasonPhase">
+            <div class="section-label">Detected Season</div>
+            <div class="result-item">{{ result.seasonPhase }}</div>
+          </div>
+
+          <div class="section" *ngIf="result.conditions?.length > 0">
+            <div class="section-label">Hive Conditions</div>
+            <div class="result-item" *ngFor="let c of result.conditions"
+                 [class.urgent]="c.intervention">
+              {{ c.status }}
+              <span class="badge badge-high" *ngIf="c.intervention">Action required</span>
+            </div>
+          </div>
+
+          <div class="section" *ngIf="result.diagnoses?.length > 0">
+            <div class="section-label">Diagnoses</div>
+            <div class="result-item" *ngFor="let d of result.diagnoses"
+                 [class.urgent]="d.urgency === 'URGENT'">
+              <strong>{{ d.disease }}</strong>
+              <span class="badge" [ngClass]="{
+                'badge-urgent': d.urgency === 'URGENT',
+                'badge-high': d.urgency === 'HIGH',
+                'badge-medium': d.urgency === 'MEDIUM'
+              }">{{ d.urgency }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" *ngIf="result.recommendations?.length > 0">
+          <div class="card-title">Recommendations</div>
+          <div *ngFor="let r of result.recommendations" class="result-item"
+               [class.urgent]="r.urgency === 'URGENT'"
+               [class.high]="r.urgency === 'HIGH'">
+            <div class="rec-meta">
+              <span class="badge" [ngClass]="{
+                'badge-urgent': r.urgency === 'URGENT',
+                'badge-high': r.urgency === 'HIGH',
+                'badge-medium': r.urgency === 'MEDIUM'
+              }">{{ r.urgency }}</span>
+              <span class="rec-type">{{ r.type }}</span>
+            </div>
+            <p class="rec-text">{{ r.text }}</p>
+            <div class="warning-box" *ngIf="r.warning">{{ r.warning }}</div>
+          </div>
+        </div>
+
+        <div class="card" *ngIf="result.alarms?.length > 0">
+          <div class="card-title">Alarms</div>
+          <div *ngFor="let a of result.alarms" class="alarm-box">
+            <strong>{{ a.type }}</strong> — {{ a.message }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

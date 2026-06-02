@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 public class DiseaseSuspicion implements Serializable {
     private static final long serialVersionUID = 1L;
-
     private String disease;
     private String level;  // "high", "medium", "low"
 

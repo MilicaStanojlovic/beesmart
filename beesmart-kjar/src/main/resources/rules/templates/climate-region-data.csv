@@ -1,0 +1,23 @@
+region,month,minTemp,activity,urgency,checkDays
+Pannonian,3,10,Early spring inspection. Vojvodina warms fast - check stores and brood.,HIGH,7
+Pannonian,5,18,Acacia flow starts mid-May. Place supers by May 10. Main harvest period.,URGENT,3
+Pannonian,6,22,Harvest acacia honey. Prepare for sunflower flow (July).,HIGH,7
+Pannonian,7,24,Sunflower flow active. Keep supers on. Ensure water source nearby.,HIGH,5
+Pannonian,9,14,Early autumn feeding. Pannonian winters are cold - target 18kg stores.,HIGH,7
+Pannonian,11,2,Install winter wrapping. Pannonian wind exposure requires extra insulation.,HIGH,30
+Pannonian,12,-5,Deep winter. Do not open hives. Monitor weight remotely if possible.,LOW,30
+Mountain,3,5,Mountain spring is late. Do not open hives until temp > 10C consistently.,MEDIUM,14
+Mountain,4,8,First inspection when snow melts. Emergency feeding likely needed.,URGENT,7
+Mountain,5,12,Mountain pasture begins later. Wild flowers and meadow flow from late May.,HIGH,7
+Mountain,6,16,Main mountain flow: wildflower and forest honeydew. Minimal interventions.,HIGH,10
+Mountain,7,18,Continue mountain flow. Check for varroa after summer solstice.,HIGH,7
+Mountain,9,8,Early winter preparation. Mountain cold comes sooner - feed by mid-September.,URGENT,5
+Mountain,10,3,Oxalic acid treatment. Reduce entrances. Install mouse guards early.,HIGH,10
+Mountain,11,-2,Full winter insulation required. Mountain hives need windbreaks.,HIGH,30
+Coastal,2,10,Coastal spring starts early. First inspection possible in late February.,HIGH,10
+Coastal,3,12,Rosemary and early citrus flow. Place supers early. Watch for swarming.,URGENT,5
+Coastal,4,15,Main coastal flow: sage and rosemary. Peak nectar period.,URGENT,3
+Coastal,5,18,Harvest spring honey. Prepare for summer dearth period.,HIGH,7
+Coastal,8,24,Summer dearth. High robbery risk. Reduce entrances. Provide water.,HIGH,5
+Coastal,9,18,Autumn flow possible: ivy and heather. Light harvest opportunity.,MEDIUM,10
+Coastal,11,8,Mild coastal winter. Less insulation needed. Monitor varroa levels.,MEDIUM,14

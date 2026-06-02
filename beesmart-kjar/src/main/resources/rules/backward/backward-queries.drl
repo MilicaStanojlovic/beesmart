@@ -2,7 +2,7 @@ package rules.backward;
 
 import com.beesmart.model.Causes;
 import com.beesmart.model.BelongsToGroup;
-import com.beesmart.model.Hive;           // ← DODAJ OVO
+import com.beesmart.model.Hive;
 import com.beesmart.model.Recommendation;
 
 // Query 1: Recursive cause-effect chain

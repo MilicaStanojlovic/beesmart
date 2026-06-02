@@ -5,7 +5,6 @@ import java.io.Serializable;
 
 public class Recommendation implements Serializable {
     private static final long serialVersionUID = 1L;
-
     private Long hiveId;
     private String type;        // "FEEDING", "TREATMENT", "INSPECTION", "ANTI_SWARM", "QUEEN_REPLACE"
     private String text;

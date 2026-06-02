@@ -1,0 +1,139 @@
+<div class="cep-page">
+  <div class="page-header">
+    <h2 class="page-title">Live Hive Monitor</h2>
+    <p class="page-subtitle">Complex Event Processing — real-time sensor monitoring and pattern detection</p>
+  </div>
+
+  <!-- Simulator Control Panel -->
+  <div class="card simulator-card">
+    <div class="card-title">Sensor Simulator</div>
+    <div class="simulator-controls">
+      <div class="form-group">
+        <label>Scenario</label>
+        <select [(ngModel)]="simulatorScenario" [disabled]="simulatorRunning">
+          <option value="SWARMING">Swarming Detection</option>
+          <option value="ROBBING">Robbing Detection</option>
+          <option value="QUEEN_LOSS">Queen Loss Detection</option>
+          <option value="WEIGHT_DROP">Sudden Weight Drop</option>
+          <option value="NORMAL">Normal (no alarms)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Hive ID</label>
+        <input type="number" [(ngModel)]="hiveId" [disabled]="simulatorRunning">
+      </div>
+      <div class="simulator-buttons">
+        <button class="btn btn-accent" (click)="startSimulator()" *ngIf="!simulatorRunning">
+          Start Simulation
+        </button>
+        <button class="btn btn-danger" (click)="stopSimulator()" *ngIf="simulatorRunning">
+          Stop Simulation
+        </button>
+      </div>
+    </div>
+    <div class="simulator-info" *ngIf="simulatorStatus">
+      <span class="status-indicator" [class.active]="simulatorRunning"></span>
+      <span *ngIf="simulatorRunning">Running: {{ simulatorStatus.scenario }} | Tick: {{ simulatorStatus.tickCount }}</span>
+      <span *ngIf="!simulatorRunning">Stopped</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- LEFT: Manual Sensor Inputs -->
+    <div class="input-column">
+
+      <div class="card">
+        <div class="card-title">Temperature</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Value (°C)</label>
+            <input type="number" [(ngModel)]="tempValue" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>Zone</label>
+            <select [(ngModel)]="tempZone">
+              <option value="brood">Brood</option>
+              <option value="external">External</option>
+              <option value="super">Super</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" (click)="sendTemperature()">Submit Reading</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Sound</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Decibels (dB)</label>
+            <input type="number" [(ngModel)]="soundDb" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>Frequency (Hz)</label>
+            <input type="number" [(ngModel)]="soundFreq" step="1">
+          </div>
+        </div>
+        <button class="btn btn-primary" (click)="sendSound()">Submit Reading</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Weight</div>
+        <div class="form-group">
+          <label>Value (kg)</label>
+          <input type="number" [(ngModel)]="weightValue" step="0.1">
+        </div>
+        <button class="btn btn-primary" (click)="sendWeight()">Submit Reading</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Humidity</div>
+        <div class="form-group">
+          <label>Value (%)</label>
+          <input type="number" [(ngModel)]="humidityValue" step="0.1">
+        </div>
+        <button class="btn btn-primary" (click)="sendHumidity()">Submit Reading</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Alarms & Log -->
+    <div class="results-column">
+      <div class="card">
+        <div class="card-title-row">
+          <span class="card-title" style="margin-bottom:0; padding-bottom:0; border:none;">Active Alarms</span>
+          <button class="btn btn-secondary btn-sm" (click)="refreshAlarms()">Refresh</button>
+        </div>
+
+        <div *ngIf="alarms.length === 0" class="status-ok">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span>All systems nominal — no alarms detected</span>
+        </div>
+
+        <div *ngFor="let alarm of alarms" class="alarm-box">
+          <div class="alarm-header">
+            <span class="badge" [ngClass]="{
+              'badge-urgent': alarm.urgency === 'URGENT',
+              'badge-high': alarm.urgency === 'HIGH',
+              'badge-medium': alarm.urgency === 'MEDIUM'
+            }">{{ alarm.urgency }}</span>
+            <span class="alarm-type">{{ alarm.type }}</span>
+          </div>
+          <p class="alarm-msg">{{ alarm.message }}</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Event Log</div>
+        <div *ngIf="eventLog.length === 0" class="empty-log">No events submitted yet.</div>
+        <div class="log-table" *ngIf="eventLog.length > 0">
+          <div *ngFor="let log of eventLog" class="log-row">
+            <span class="log-time">{{ log.time }}</span>
+            <span class="log-text">{{ log.text }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

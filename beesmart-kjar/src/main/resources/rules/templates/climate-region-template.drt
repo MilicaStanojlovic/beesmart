@@ -1,0 +1,30 @@
+template header
+region
+month
+minTemp
+activity
+urgency
+checkDays
+
+package rules.templates;
+
+import com.beesmart.model.Hive;
+import com.beesmart.model.Weather;
+import com.beesmart.model.Recommendation;
+
+template "climate-region"
+
+rule "Region activity @{row.rowNumber} - @{region} month @{month}"
+no-loop true
+when
+    $h : Hive( region == "@{region}" )
+    $w : Weather( month == @{month}, avgWeeklyTemp > @{minTemp} )
+then
+    Recommendation r = new Recommendation($h.getId(), "@{activity}");
+    r.setType("REGIONAL");
+    r.setUrgency("@{urgency}");
+    r.setCheckInDays(@{checkDays});
+    insert(r);
+end
+
+end template

@@ -5,7 +5,6 @@ import java.io.Serializable;
 
 public class DWVMarker implements Serializable {
     private static final long serialVersionUID = 1L;
-
     private boolean detected;
 
     public DWVMarker() {}

@@ -1,0 +1,85 @@
+.results-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f5;
+}
+
+.results-meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.chain-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  background: #fafafa;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.chain-item.allowed {
+  border-left: 3px solid #22c55e;
+  background: #fafff5;
+}
+
+.chain-from {
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.chain-to {
+  color: #374151;
+}
+
+.verify-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.verify-result.verified {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.verify-result.not-verified {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.verify-chain {
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.verify-status {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.verified .verify-status {
+  color: #166534;
+}
+
+.not-verified .verify-status {
+  color: #991b1b;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}

@@ -5,10 +5,10 @@ import java.io.Serializable;
 
 public class Hive implements Serializable {
     private static final long serialVersionUID = 1L;
-
     private Long id;
     private String hiveType;          // "LR", "DB", "AZ"
     private String breed;             // "Carniolan", "Italian", "Buckfast"
+    private String region;  // "Pannonian", "Mountain", "Coastal"
     private int frameCount;           // total frames with bees
     private int broodFrameCount;      // frames with brood
     private double honeyStockKg;      // honey reserves in kg
@@ -35,7 +35,8 @@ public class Hive implements Serializable {
 
     public String getBreed() { return breed; }
     public void setBreed(String breed) { this.breed = breed; }
-
+    public String getRegion() { return region; }
+    public void setRegion(String region) { this.region = region; }
     public int getFrameCount() { return frameCount; }
     public void setFrameCount(int frameCount) { this.frameCount = frameCount; }
 

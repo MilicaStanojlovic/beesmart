@@ -7,7 +7,6 @@ import java.util.List;
 
 public class DiagnosisResult implements Serializable {
     private static final long serialVersionUID = 1L;
-
     private int rulesFired;
     private String seasonPhase;
     private List<SocietyStatus> conditions = new ArrayList<>();

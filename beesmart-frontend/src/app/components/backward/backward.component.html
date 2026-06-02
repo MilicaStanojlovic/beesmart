@@ -1,0 +1,97 @@
+<div class="backward-page">
+  <div class="page-header">
+    <h2 class="page-title">Cause-Effect Analysis</h2>
+    <p class="page-subtitle">Backward chaining — recursive queries through disease cause chains and treatment hierarchies</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Find All Effects</div>
+      <div class="form-group">
+        <label>Select Cause</label>
+        <select [(ngModel)]="selectedCause">
+          <option value="Varroosis">Varroosis</option>
+          <option value="Pesticides">Pesticides</option>
+          <option value="AmericanFoulbrood">American Foulbrood</option>
+          <option value="HighHumidity">High Humidity</option>
+          <option value="OldQueen">Old Queen</option>
+          <option value="LowTemperature">Low Temperature</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" (click)="findEffects()">Find Effects</button>
+
+      <div *ngIf="effectsResult" class="results-section">
+        <div class="results-meta">{{ effectsResult.cause }} — {{ effectsResult.count }} effects found</div>
+        <div class="chain-item" *ngFor="let e of effectsResult.effects">
+          <span class="chain-from">{{ effectsResult.cause }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <span class="chain-to">{{ e }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Find All Causes</div>
+      <div class="form-group">
+        <label>Select Effect</label>
+        <select [(ngModel)]="selectedEffect">
+          <option value="CCD">CCD (Colony Collapse)</option>
+          <option value="DeformedWings">Deformed Wings</option>
+          <option value="WeakColony">Weak Colony</option>
+          <option value="BroodDecay">Brood Decay</option>
+          <option value="HoneyContamination">Honey Contamination</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" (click)="findCauses()">Find Causes</button>
+
+      <div *ngIf="causesResult" class="results-section">
+        <div class="results-meta">{{ causesResult.effect }} — {{ causesResult.count }} causes found</div>
+        <div class="chain-item" *ngFor="let c of causesResult.causes">
+          <span class="chain-from">{{ c }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <span class="chain-to">{{ causesResult.effect }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Verify Cause-Effect Chain</div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Cause</label>
+          <input type="text" [(ngModel)]="checkCause" placeholder="e.g. Varroosis">
+        </div>
+        <div class="form-group">
+          <label>Effect</label>
+          <input type="text" [(ngModel)]="checkEffect" placeholder="e.g. CCD">
+        </div>
+      </div>
+      <button class="btn btn-primary" (click)="checkChain()">Verify</button>
+
+      <div *ngIf="checkResult" class="results-section">
+        <div class="verify-result" [class.verified]="checkResult.confirmed" [class.not-verified]="!checkResult.confirmed">
+          <span class="verify-chain">{{ checkResult.cause }} → {{ checkResult.effect }}</span>
+          <span class="verify-status">{{ checkResult.confirmed ? 'Confirmed' : 'Not confirmed' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Treatment Hierarchy</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" (click)="getOrganicTreatments()">Organic Allowed</button>
+        <button class="btn btn-secondary" (click)="getAllTreatments()">All Anti-Varroa</button>
+      </div>
+
+      <div *ngIf="organicResult" class="results-section">
+        <div class="results-meta">{{ organicResult.note }}</div>
+        <div class="chain-item allowed" *ngFor="let t of organicResult.allowedTreatments">{{ t }}</div>
+      </div>
+
+      <div *ngIf="allTreatments" class="results-section">
+        <div class="results-meta">Category: {{ allTreatments.category }}</div>
+        <div class="chain-item" *ngFor="let t of allTreatments.treatments">{{ t }}</div>
+      </div>
+    </div>
+  </div>
+</div>

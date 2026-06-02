@@ -40,7 +40,10 @@ public class BackwardService {
 
             for (org.kie.api.runtime.rule.QueryResultsRow row : results) {
                 String effect = (String) row.get("effect");
-                effects.add(effect);
+                //effects.add(effect);
+                if (!effects.contains(effect)) {
+                    effects.add(effect);
+                }
             }
 
             return effects;
@@ -65,7 +68,10 @@ public class BackwardService {
 
             for (org.kie.api.runtime.rule.QueryResultsRow row : results) {
                 String cause = (String) row.get("cause");
-                causes.add(cause);
+                //causes.add(cause);
+                if (!causes.contains(cause)) {
+                    causes.add(cause);
+                }
             }
 
             return causes;

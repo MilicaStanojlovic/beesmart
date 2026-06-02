@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 public class SeasonPhase implements Serializable {
     private static final long serialVersionUID = 1L;
-
     private String name; // "EARLY_SPRING", "SPRING_DEVELOPMENT", "MAIN_PASTURE", etc.
 
     public SeasonPhase() {}

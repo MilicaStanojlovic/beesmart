@@ -84,4 +84,36 @@ public class TemplateController {
         ks.dispose();
         return ResponseEntity.ok(results);
     }
+    /**
+     * GET /api/templates/regional?region=Pannonian&month=5&avgTemp=18
+     * Get regional activity recommendations based on climate zone.
+     */
+    @GetMapping("/regional")
+    public ResponseEntity<List<Recommendation>> getRegionalActivities(
+            @RequestParam String region,
+            @RequestParam int month,
+            @RequestParam(defaultValue = "15.0") double avgTemp) {
+
+        KieSession ks = templateService.createSessionFromTemplate(
+                "/rules/templates/climate-region-template.drt",
+                "/rules/templates/climate-region-data.csv"
+        );
+
+        Hive hive = new Hive(1L, "LR", "Carniolan");
+        hive.setRegion(region);
+        ks.insert(hive);
+        ks.insert(new Weather(month, avgTemp, avgTemp, avgTemp));
+
+        ks.fireAllRules();
+
+        List<Recommendation> results = new ArrayList<>();
+        for (Object obj : ks.getObjects()) {
+            if (obj instanceof Recommendation) {
+                results.add((Recommendation) obj);
+            }
+        }
+
+        ks.dispose();
+        return ResponseEntity.ok(results);
+    }
 }

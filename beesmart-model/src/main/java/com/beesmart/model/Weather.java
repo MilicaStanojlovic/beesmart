@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 public class Weather implements Serializable {
     private static final long serialVersionUID = 1L;
-
     private int month;                  // 1-12
     private double avgWeeklyTemp;
     private double forecast3DayTemp;
