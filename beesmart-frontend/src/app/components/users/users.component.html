@@ -1,0 +1,100 @@
+<div class="users-page">
+  <div class="page-header">
+    <h2 class="page-title">User Management</h2>
+    <p class="page-subtitle">Create, edit and deactivate beekeeper accounts</p>
+  </div>
+
+  <div class="alarm-box" *ngIf="error">{{ error }}</div>
+  <div class="warning-box success-box" *ngIf="success">{{ success }}</div>
+
+  <div class="grid-2 users-grid">
+
+    <!-- LEFT: form -->
+    <div>
+      <div class="card">
+        <div class="card-title">{{ editingId === null ? 'New Beekeeper' : 'Edit Beekeeper' }}</div>
+
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" [(ngModel)]="form.username" placeholder="e.g. milica"
+                 [disabled]="editingId !== null">
+        </div>
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" [(ngModel)]="form.fullName" placeholder="e.g. Milica Stanojlovic">
+        </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="form.email" placeholder="you@example.com">
+        </div>
+
+        <div class="form-group">
+          <label>{{ editingId === null ? 'Password' : 'New Password' }}</label>
+          <input type="password" [(ngModel)]="form.password"
+                 [placeholder]="editingId === null ? 'At least 5 characters' : 'Leave blank to keep current'">
+        </div>
+
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="form.active"> Account active
+        </label>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="save()">
+            {{ editingId === null ? 'Create Beekeeper' : 'Save Changes' }}
+          </button>
+          <button class="btn btn-secondary" *ngIf="editingId !== null" (click)="cancelEdit()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: list -->
+    <div>
+      <div class="card">
+        <div class="card-title">Beekeepers ({{ users.length }})</div>
+
+        <div class="loading" *ngIf="loading">Loading accounts...</div>
+
+        <div class="empty-state" *ngIf="!loading && users.length === 0">
+          <p>No beekeeper accounts yet</p>
+        </div>
+
+        <table class="user-table" *ngIf="!loading && users.length > 0">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of users" [class.row-editing]="u.id === editingId">
+              <td>
+                <div class="user-cell-name">{{ u.fullName || u.username }}</div>
+                <div class="user-cell-meta">{{ u.username }}<span *ngIf="u.email"> &middot; {{ u.email }}</span></div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="u.active ? 'badge-low' : 'badge-urgent'">
+                  {{ u.active ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="btn btn-secondary btn-sm" (click)="startEdit(u)">Edit</button>
+                  <button class="btn btn-secondary btn-sm" (click)="toggleActive(u)">
+                    {{ u.active ? 'Deactivate' : 'Activate' }}
+                  </button>
+                  <button class="btn btn-danger btn-sm" (click)="remove(u)">Delete</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

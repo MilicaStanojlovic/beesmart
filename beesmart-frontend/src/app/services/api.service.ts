@@ -102,4 +102,28 @@ export class ApiService {
         .set('breed', breed).set('month', month).set('avgTemp', avgTemp)
     });
   }
+
+  // ─── User administration (ADMIN only) ───
+
+  getUsers(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/users`);
+  }
+
+  createUser(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/users`, payload);
+  }
+
+  updateUser(id: number, payload: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/users/${id}`, payload);
+  }
+
+  setUserActive(id: number, active: boolean): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/users/${id}/active`, null, {
+      params: new HttpParams().set('active', active)
+    });
+  }
+
+  deleteUser(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/users/${id}`);
+  }
 }
