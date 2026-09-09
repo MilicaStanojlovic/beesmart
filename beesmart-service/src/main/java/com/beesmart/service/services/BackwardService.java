@@ -133,6 +133,8 @@ public class BackwardService {
         List<String> chemical = getTreatmentsInCategory("ChemicalAcaricide");
 
         allAntiVarroa.removeAll(chemical);
+        allAntiVarroa.remove("ChemicalAcaricide");
+        allAntiVarroa.remove("OrganicAcids");
         return allAntiVarroa;
     }
 
